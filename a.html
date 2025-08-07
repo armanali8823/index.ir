@@ -12,9 +12,7 @@
       padding: 20px;
       text-align: center;
     }
-    h2 {
-      margin-bottom: 10px;
-    }
+    h2 { margin-bottom: 10px; }
     #dateInput {
       width: 180px;
       padding: 8px;
@@ -23,20 +21,17 @@
       border: 1px solid #ccc;
       text-align: center;
       margin-bottom: 20px;
-      display: inline-block;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
       margin-bottom: 20px;
-      text-align: center;
     }
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
       font-size: 14px;
-      text-align: center;
     }
     th {
       background-color: #eee;
@@ -48,6 +43,7 @@
       border-radius: 4px;
       cursor: pointer;
       user-select: none;
+      margin: 2px;
     }
     .btn:active { transform: scale(0.95); }
     .delete-btn { background-color: #9e9e9e; color: white; }
@@ -66,30 +62,22 @@
       user-select: none;
     }
     .add-form {
-      margin-top: 0;
       background: white;
       padding: 10px 12px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       max-width: 420px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 0 auto;
       text-align: left;
-      overflow: hidden;
     }
     .add-form input {
       width: 120px;
       padding: 6px;
       font-size: 13px;
-      margin-bottom: 0;
       margin-left: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      box-sizing: border-box;
       text-align: center;
-      direction: rtl;
-      display: inline-block;
-      vertical-align: middle;
     }
     .add-form button.add-btn {
       width: 90px;
@@ -100,10 +88,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      display: inline-block;
-      vertical-align: middle;
       margin-left: 8px;
-      user-select: none;
     }
     #historyList {
       margin-top: 30px;
@@ -112,23 +97,26 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: center;
+      margin: 30px auto 0;
     }
-    #historyList h3 {
-      margin-bottom: 10px;
-    }
-    .history-btn {
-      display: inline-block;
-      margin: 5px 6px;
-      padding: 6px 12px;
-      background: #607d8b;
+    .history-entry {
+      background-color: #607d8b;
       color: white;
+      padding: 6px 10px;
+      margin: 5px;
       border-radius: 5px;
+      display: inline-block;
+    }
+    .history-entry span {
       cursor: pointer;
-      font-size: 13px;
-      user-select: none;
+      font-weight: bold;
+    }
+    .history-buttons {
+      margin-top: 5px;
+    }
+    .history-buttons button {
+      font-size: 12px;
+      margin: 3px;
     }
     #historyTable table {
       margin: 10px auto;
@@ -145,9 +133,8 @@
 <body>
 
   <h2>سامانه حضور و غیاب شرکت گسترده کام پویا جهش</h2>
-  
-  <!-- تاریخ وسط بالای صفحه -->
-  <input type="text" id="dateInput" placeholder="مثلاً ۱۴۰۳/۰۵/۱۷" />
+
+  <input type="text" id="dateInput" placeholder="مثلاً 1404/05/17" />
 
   <table>
     <thead>
@@ -159,13 +146,12 @@
         <th>خروج</th>
         <th>حاضر</th>
         <th>غایب</th>
-        <th>حذف</th>
+        <th>عملیات</th>
       </tr>
     </thead>
     <tbody id="employeeTable"></tbody>
   </table>
 
-  <!-- دکمه ذخیره کوچک سمت چپ -->
   <button class="save-btn" onclick="saveFinalData()">💾 ذخیره</button>
 
   <div class="add-form">
@@ -191,23 +177,58 @@
   function renderTable() {
     const table = document.getElementById('employeeTable');
     table.innerHTML = '';
-
     employees.forEach((emp, index) => {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${index + 1}</td>
         <td>${emp.name}</td>
         <td>${emp.job}</td>
-        <td><input type="text" value="${emp.enter}" placeholder="مثلاً ۰۹:۰۰"
-          oninput="updateEnter(${index}, this.value)" ${emp.enter === '-' ? 'disabled' : ''}></td>
-        <td><input type="text" value="${emp.exit}" placeholder="مثلاً ۱۷:۰۰"
-          oninput="updateExit(${index}, this.value)" ${emp.exit === '-' ? 'disabled' : ''}></td>
+        <td><input type="text" value="${emp.enter}" oninput="updateEnter(${index}, this.value)" ${emp.enter === '-' ? 'disabled' : ''} placeholder="مثلاً 9:00"></td>
+        <td><input type="text" value="${emp.exit}" oninput="updateExit(${index}, this.value)" ${emp.exit === '-' ? 'disabled' : ''} placeholder="مثلاً 17:00"></td>
         <td><button class="btn status-btn ${emp.status === 'present' ? 'active' : ''}" onclick="markStatus(${index}, 'present')">✔ حاضر</button></td>
         <td><button class="btn status-btn ${emp.status === 'absent' ? 'active' : ''}" onclick="markStatus(${index}, 'absent')">✖ غایب</button></td>
-        <td><button class="btn delete-btn" onclick="deleteEmployee(${index})">🗑 حذف</button></td>
+        <td>
+          <button class="btn edit-btn" onclick="toggleEditRow(${index}, this)">✏️ ویرایش</button>
+          <button class="btn delete-btn" onclick="deleteEmployee(${index})">🗑 حذف</button>
+        </td>
       `;
       table.appendChild(row);
     });
+  }
+
+  function toggleEditRow(index, btn) {
+    const row = document.querySelectorAll('#employeeTable tr')[index];
+    if (!row) return;
+
+    const editMode = btn.textContent === '✔ ذخیره';
+
+    if (editMode) {
+      // ذخیره تغییرات نام و شغل
+      const nameInput = row.cells[1].querySelector('input');
+      const jobInput = row.cells[2].querySelector('input');
+      if (!nameInput.value.trim() || !jobInput.value.trim()) {
+        alert('نام و شغل نمی‌توانند خالی باشند!');
+        return;
+      }
+      employees[index].name = nameInput.value.trim();
+      employees[index].job = jobInput.value.trim();
+
+      // ورود و خروج در حالت عادی input هستند، پس مقدار آنها را هم بگیریم
+      const enterInput = row.cells[3].querySelector('input');
+      const exitInput = row.cells[4].querySelector('input');
+      employees[index].enter = enterInput.value.trim();
+      employees[index].exit = exitInput.value.trim();
+
+      saveAndRender();
+      btn.textContent = '✏️ ویرایش';
+    } else {
+      // فعال کردن حالت ویرایش: نام و شغل را به input تبدیل کن
+      const nameTd = row.cells[1];
+      const jobTd = row.cells[2];
+      nameTd.innerHTML = `<input type="text" value="${employees[index].name}">`;
+      jobTd.innerHTML = `<input type="text" value="${employees[index].job}">`;
+      btn.textContent = '✔ ذخیره';
+    }
   }
 
   function updateEnter(index, value) {
@@ -260,7 +281,7 @@
     const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
     const date = document.getElementById('dateInput').value.trim();
     if (!date) {
-      alert("لطفاً تاریخ شمسی را وارد کنید.");
+      alert("لطفاً تاریخ را وارد کنید.");
       return;
     }
     history[date] = [...employees];
@@ -271,27 +292,55 @@
 
   function loadHistoryDates() {
     const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
-    const historyButtons = document.getElementById('historyButtons');
-    historyButtons.innerHTML = '';
-    document.getElementById('historyTable').innerHTML = '';
+    const container = document.getElementById('historyButtons');
+    container.innerHTML = '';
     Object.keys(history).sort().reverse().forEach(date => {
-      const btn = document.createElement('span');
-      btn.textContent = date;
-      btn.className = 'history-btn';
-      btn.onclick = () => toggleHistoryTable(date, history[date]);
-      historyButtons.appendChild(btn);
+      const box = document.createElement('div');
+      box.className = 'history-entry';
+
+      const dateSpan = document.createElement('span');
+      dateSpan.textContent = date;
+      dateSpan.onclick = () => toggleHistoryTable(date, history[date]);
+      box.appendChild(dateSpan);
+
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'history-buttons';
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️ ویرایش';
+      editBtn.onclick = () => {
+        employees = [...history[date]];
+        saveAndRender();
+        document.getElementById('dateInput').value = date;
+        window.scrollTo(0, 0);
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '🗑 حذف';
+      delBtn.onclick = () => {
+        if (confirm(`آیا می‌خواهید گزارش «${date}» حذف شود؟`)) {
+          delete history[date];
+          localStorage.setItem('attendanceHistory', JSON.stringify(history));
+          loadHistoryDates();
+        }
+      };
+
+      btnGroup.appendChild(editBtn);
+      btnGroup.appendChild(delBtn);
+      box.appendChild(btnGroup);
+
+      container.appendChild(box);
     });
   }
 
-  let openDate = null;
   function toggleHistoryTable(date, data) {
     const container = document.getElementById('historyTable');
-    if (openDate === date) {
+    if (container.getAttribute('data-open') === date) {
       container.innerHTML = '';
-      openDate = null;
+      container.removeAttribute('data-open');
       return;
     }
-    openDate = date;
+    container.setAttribute('data-open', date);
     let html = `<h4>📆 گزارش برای تاریخ: ${date}</h4><table><tr><th>نام</th><th>شغل</th><th>ورود</th><th>خروج</th><th>وضعیت</th></tr>`;
     data.forEach(emp => {
       html += `<tr>
