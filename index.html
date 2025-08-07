@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>حضور و غیاب با تاریخ قابل نوشتن</title>
+<style>
+  body {
+    font-family: Tahoma, sans-serif;
+    direction: rtl;
+    background-color: #f9f9f9;
+    padding: 1rem;
+    margin: 0;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+  }
+  .date-text-container {
+    max-width: 300px;
+    margin: 0 auto 1.5rem auto;
+    text-align: center;
+  }
+  #attendanceDate {
+    width: 100%;
+    max-width: 250px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    margin-bottom: 1.5rem;
+    table-layout: fixed;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 0.7rem 0.5rem;
+    font-size: 0.95rem;
+    text-align: center;
+    word-break: break-word;
+  }
+  th {
+    background-color: #eee;
+  }
+  input[type=text] {
+    width: 100%;
+    max-width: 150px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  .btn {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+  .btn:active {
+    transform: scale(0.95);
+  }
+  .enter-btn { background-color: #4caf50; color: white; }
+  .exit-btn { background-color: #f44336; color: white; }
+  .delete-btn { background-color: #9e9e9e; color: white; }
+  .status-btn { background-color: #ccc; color: #000; }
+  .status-btn.active { background-color: #2196f3; color: white; }
+  .add-form {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    max-width: 400px;
+    margin: 0 auto 1.5rem auto;
+  }
+  .add-form input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+  }
+  .add-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #2196f3;
+    color: white;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .add-form button:hover {
+    background-color: #1976d2;
+  }
+  @media (max-width: 600px) {
+    body {
+      padding: 0.5rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+    th, td {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.3rem;
+    }
+    input[type=text] {
+      max-width: 100px;
+      font-size: 0.85rem;
+      padding: 5px 6px;
+    }
+    .btn {
+      font-size: 0.75rem;
+      padding: 4px 7px;
+    }
+    .add-form {
+      max-width: 100%;
+      padding: 10px;
+    }
+    .add-form input {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+    .add-form button {
+      font-size: 1rem;
+      padding: 10px;
+    }
+    .date-text-container {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h2>سامانه حضور و غیاب با تاریخ قابل نوشتن</h2>
+
+<div class="date-text-container">
+  <input type="text" id="attendanceDate" placeholder="مثلاً ۱۴۰۴٫۰۵٫۱۶" />
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>ردیف</th>
+      <th>نام</th>
+      <th>شغل</th>
+      <th>ورود</th>
+      <th>خروج</th>
+      <th>حاضر</th>
+      <th>غایب</th>
+      <th>حذف</th>
+    </tr>
+  </thead>
+  <tbody id="employeeTable"></tbody>
+</table>
+
+<div class="add-form">
+  <input type="text" id="nameInput" placeholder="نام کارمند" />
+  <input type="text" id="jobInput" placeholder="شغل کارمند" />
+  <button onclick="addEmployee()">افزودن</button>
+</div>
+
+<script>
+  let employees = JSON.parse(localStorage.getItem('employeeList')) || [];
+
+  function saveAndRender() {
+    localStorage.setItem('employeeList', JSON.stringify(employees));
+    renderTable();
+  }
+
+  function renderTable() {
+    const table = document.getElementById('employeeTable');
+    table.innerHTML = '';
+
+    employees.forEach((emp, index) => {
+      const enterId = 'enterInput' + index;
+      const exitId = 'exitInput' + index;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${emp.name}</td>
+        <td>${emp.job}</td>
+        <td>
+          <input type="text" id="${enterId}" 
+            value="${emp.enter || ''}" 
+            placeholder="مثلاً ۰۹:۰۰" 
+            oninput="updateEnter(${index}, this.value)" />
+        </td>
+        <td>
+          <input type="text" id="${exitId}" 
+            value="${emp.exit || ''}" 
+            placeholder="مثلاً ۱۷:۳۰" 
+            oninput="updateExit(${index}, this.value)" />
+        </td>
+        <td>
+          <button class="btn status-btn ${emp.status === 'present' ? 'active' : ''}" onclick="markStatus(${index}, 'present')">✔ حاضر</button>
+        </td>
+        <td>
+          <button class="btn status-btn ${emp.status === 'absent' ? 'active' : ''}" onclick="markStatus(${index}, 'absent')">✖ غایب</button>
+        </td>
+        <td>
+          <button class="btn delete-btn" onclick="deleteEmployee(${index})">🗑 حذف</button>
+        </td>
+      `;
+      table.appendChild(row);
+    });
+  }
+
+  function updateEnter(index, value) {
+    employees[index].enter = value;
+    saveToLocal();
+  }
+
+  function updateExit(index, value) {
+    employees[index].exit = value;
+    saveToLocal();
+  }
+
+  function addEmployee() {
+    const name = document.getElementById('nameInput').value.trim();
+    const job = document.getElementById('jobInput').value.trim();
+
+    if (!name || !job) {
+      alert('لطفاً نام و شغل را وارد کنید.');
+      return;
+    }
+
+    employees.push({name, job, enter: '', exit: '', status: ''});
+    document.getElementById('nameInput').value = '';
+    document.getElementById('jobInput').value = '';
+    saveAndRender();
+  }
+
+  function markStatus(index, status) {
+    employees[index].status = status;
+    saveAndRender();
+  }
+
+  function deleteEmployee(index) {
+    if (confirm('آیا می‌خواهید این کارمند حذف شود؟')) {
+      employees.splice(index, 1);
+      saveAndRender();
+    }
+  }
+
+  function saveToLocal() {
+    localStorage.setItem('employeeList', JSON.stringify(employees));
+  }
+
+  renderTable();
+</script>
+
+</body>
+  </html>
