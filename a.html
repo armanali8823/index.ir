@@ -10,12 +10,27 @@
       direction: rtl;
       background-color: #f0f0f0;
       padding: 20px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    #dateInput {
+      width: 180px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      text-align: center;
+      margin-bottom: 20px;
+      display: inline-block;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
       margin-bottom: 20px;
+      text-align: center;
     }
     th, td {
       border: 1px solid #ccc;
@@ -32,6 +47,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      user-select: none;
     }
     .btn:active { transform: scale(0.95); }
     .delete-btn { background-color: #9e9e9e; color: white; }
@@ -40,37 +56,54 @@
     .save-btn {
       background-color: #4caf50;
       color: white;
-      font-size: 16px;
-      padding: 12px;
-      width: 100%;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-    .add-form {
-      margin-top: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .add-form input {
-      width: 100%;
-      padding: 10px;
-      font-size: 14px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .add-form button {
-      width: 100%;
-      padding: 12px;
-      background-color: #2196f3;
-      color: white;
-      font-size: 15px;
+      font-size: 12px;
+      padding: 6px 12px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      float: left;
+      margin-bottom: 10px;
+      user-select: none;
+    }
+    .add-form {
+      margin-top: 0;
+      background: white;
+      padding: 10px 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      overflow: hidden;
+    }
+    .add-form input {
+      width: 120px;
+      padding: 6px;
+      font-size: 13px;
+      margin-bottom: 0;
+      margin-left: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      direction: rtl;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .add-form button.add-btn {
+      width: 90px;
+      padding: 6px 10px;
+      font-size: 13px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+      user-select: none;
     }
     #historyList {
       margin-top: 30px;
@@ -78,32 +111,43 @@
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
     }
     #historyList h3 {
       margin-bottom: 10px;
     }
     .history-btn {
       display: inline-block;
-      margin: 5px;
+      margin: 5px 6px;
       padding: 6px 12px;
       background: #607d8b;
       color: white;
       border-radius: 5px;
       cursor: pointer;
       font-size: 13px;
+      user-select: none;
     }
-    input[type=text] {
-      width: 150px;
-      text-align: center;
-      padding: 5px;
-      border-radius: 5px;
+    #historyTable table {
+      margin: 10px auto;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #historyTable th, #historyTable td {
       border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
 
-  <h2>سامانه حضور و غیاب</h2>
+  <h2>سامانه حضور و غیاب با ذخیره بر اساس تاریخ شمسی</h2>
+  
+  <!-- تاریخ وسط بالای صفحه -->
+  <input type="text" id="dateInput" placeholder="تاریخ شمسی (مثلاً ۱۴۰۳/۰۵/۱۷)" />
 
   <table>
     <thead>
@@ -121,153 +165,150 @@
     <tbody id="employeeTable"></tbody>
   </table>
 
-  <button class="save-btn" onclick="saveFinalData()">💾 ذخیره نهایی و دسته‌بندی بر اساس تاریخ</button>
+  <!-- دکمه ذخیره کوچک سمت چپ -->
+  <button class="save-btn" onclick="saveFinalData()">💾 ذخیره</button>
 
   <div class="add-form">
     <input type="text" id="nameInput" placeholder="نام کارمند" />
     <input type="text" id="jobInput" placeholder="شغل کارمند" />
-    <button onclick="addEmployee()">➕ افزودن کارمند</button>
+    <button class="add-btn" onclick="addEmployee()">➕ افزودن</button>
   </div>
 
   <div id="historyList">
-    <h3>📅 نمایش گزارش روزهای ذخیره شده:</h3>
+    <h3>📅 گزارش روزهای ذخیره شده:</h3>
     <div id="historyButtons"></div>
     <div id="historyTable"></div>
   </div>
 
-  <script>
-    let employees = JSON.parse(localStorage.getItem('employeeList')) || [];
+<script>
+  let employees = JSON.parse(localStorage.getItem('employeeList')) || [];
 
-    function saveAndRender() {
-      localStorage.setItem('employeeList', JSON.stringify(employees));
-      renderTable();
-    }
-
-    function renderTable() {
-      const table = document.getElementById('employeeTable');
-      table.innerHTML = '';
-
-      employees.forEach((emp, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${emp.name}</td>
-          <td>${emp.job}</td>
-          <td><input type="text" value="${emp.enter}" placeholder="مثلاً ۰۹:۰۰"
-            oninput="updateEnter(${index}, this.value)" ${emp.enter === '-' ? 'disabled' : ''}></td>
-          <td><input type="text" value="${emp.exit}" placeholder="مثلاً ۱۷:۰۰"
-            oninput="updateExit(${index}, this.value)" ${emp.exit === '-' ? 'disabled' : ''}></td>
-          <td><button class="btn status-btn ${emp.status === 'present' ? 'active' : ''}" onclick="markStatus(${index}, 'present')">✔ حاضر</button></td>
-          <td><button class="btn status-btn ${emp.status === 'absent' ? 'active' : ''}" onclick="markStatus(${index}, 'absent')">✖ غایب</button></td>
-          <td><button class="btn delete-btn" onclick="deleteEmployee(${index})">🗑 حذف</button></td>
-        `;
-        table.appendChild(row);
-      });
-    }
-
-    function updateEnter(index, value) {
-      employees[index].enter = value;
-      saveToLocal();
-    }
-
-    function updateExit(index, value) {
-      employees[index].exit = value;
-      saveToLocal();
-    }
-
-    function addEmployee() {
-      const name = document.getElementById('nameInput').value.trim();
-      const job = document.getElementById('jobInput').value.trim();
-      if (!name || !job) return alert("لطفاً نام و شغل را وارد کنید.");
-      employees.push({ name, job, enter: '', exit: '', status: '' });
-      document.getElementById('nameInput').value = '';
-      document.getElementById('jobInput').value = '';
-      saveAndRender();
-    }
-
-    function markStatus(index, status) {
-      employees[index].status = status;
-      if (status === 'absent') {
-        employees[index].enter = '-';
-        employees[index].exit = '-';
-      } else {
-        if (employees[index].enter === '-') employees[index].enter = '';
-        if (employees[index].exit === '-') employees[index].exit = '';
-      }
-      saveAndRender();
-    }
-
-    function deleteEmployee(index) {
-      if (confirm("آیا مطمئن هستید؟")) {
-        employees.splice(index, 1);
-        saveAndRender();
-      }
-    }
-
-    function saveToLocal() {
-      localStorage.setItem('employeeList', JSON.stringify(employees));
-    }
-
-    function saveFinalData() {
-      const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
-      const today = getTodayJalaliDate();
-      history[today] = [...employees]; // کپی بگیریم
-      localStorage.setItem('attendanceHistory', JSON.stringify(history));
-      alert("✅ ذخیره شد برای تاریخ: " + today);
-      loadHistoryDates();
-    }
-
-    function loadHistoryDates() {
-      const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
-      const historyButtons = document.getElementById('historyButtons');
-      historyButtons.innerHTML = '';
-
-      Object.keys(history).sort().reverse().forEach(date => {
-        const btn = document.createElement('span');
-        btn.textContent = date;
-        btn.className = 'history-btn';
-        btn.onclick = () => showHistoryTable(date, history[date]);
-        historyButtons.appendChild(btn);
-      });
-    }
-
-    function showHistoryTable(date, data) {
-      let html = `<h4>📆 گزارش برای تاریخ: ${date}</h4><table><tr><th>نام</th><th>شغل</th><th>ورود</th><th>خروج</th><th>وضعیت</th></tr>`;
-      data.forEach(emp => {
-        html += `<tr>
-          <td>${emp.name}</td>
-          <td>${emp.job}</td>
-          <td>${emp.enter}</td>
-          <td>${emp.exit}</td>
-          <td>${emp.status === 'present' ? 'حاضر' : 'غایب'}</td>
-        </tr>`;
-      });
-      html += '</table>';
-      document.getElementById('historyTable').innerHTML = html;
-    }
-
-    function getTodayJalaliDate() {
-      const d = new Date();
-      const gy = d.getFullYear(), gm = d.getMonth() + 1, gd = d.getDate();
-      const g_d_m = [0, 31, (gy % 4 === 0 && gy % 100 !== 0 || gy % 400 === 0) ? 29 : 28,
-        31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-      let jy = (gy <= 1600) ? 0 : 979;
-      let gy2 = (gy <= 1600) ? gy - 621 : gy - 1600;
-      let days = (365 * gy2) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) +
-        Math.floor((gy2 + 399) / 400);
-      for (let i = 0; i < gm; ++i) days += g_d_m[i];
-      days += gd - 80;
-      jy += 33 * Math.floor(days / 12053); days %= 12053;
-      jy += 4 * Math.floor(days / 1461); days %= 1461;
-      if (days > 365) { jy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
-      const jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
-      const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
-      return `${jy}/${jm.toString().padStart(2, '0')}/${jd.toString().padStart(2, '0')}`;
-    }
-
+  function saveAndRender() {
+    localStorage.setItem('employeeList', JSON.stringify(employees));
     renderTable();
+  }
+
+  function renderTable() {
+    const table = document.getElementById('employeeTable');
+    table.innerHTML = '';
+
+    employees.forEach((emp, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${emp.name}</td>
+        <td>${emp.job}</td>
+        <td><input type="text" value="${emp.enter}" placeholder="مثلاً ۰۹:۰۰"
+          oninput="updateEnter(${index}, this.value)" ${emp.enter === '-' ? 'disabled' : ''}></td>
+        <td><input type="text" value="${emp.exit}" placeholder="مثلاً ۱۷:۰۰"
+          oninput="updateExit(${index}, this.value)" ${emp.exit === '-' ? 'disabled' : ''}></td>
+        <td><button class="btn status-btn ${emp.status === 'present' ? 'active' : ''}" onclick="markStatus(${index}, 'present')">✔ حاضر</button></td>
+        <td><button class="btn status-btn ${emp.status === 'absent' ? 'active' : ''}" onclick="markStatus(${index}, 'absent')">✖ غایب</button></td>
+        <td><button class="btn delete-btn" onclick="deleteEmployee(${index})">🗑 حذف</button></td>
+      `;
+      table.appendChild(row);
+    });
+  }
+
+  function updateEnter(index, value) {
+    employees[index].enter = value;
+    saveToLocal();
+  }
+
+  function updateExit(index, value) {
+    employees[index].exit = value;
+    saveToLocal();
+  }
+
+  function addEmployee() {
+    const name = document.getElementById('nameInput').value.trim();
+    const job = document.getElementById('jobInput').value.trim();
+    if (!name || !job) {
+      alert("لطفاً نام و شغل را وارد کنید.");
+      return;
+    }
+    employees.push({ name, job, enter: '', exit: '', status: '' });
+    document.getElementById('nameInput').value = '';
+    document.getElementById('jobInput').value = '';
+    saveAndRender();
+  }
+
+  function markStatus(index, status) {
+    employees[index].status = status;
+    if (status === 'absent') {
+      employees[index].enter = '-';
+      employees[index].exit = '-';
+    } else {
+      if (employees[index].enter === '-') employees[index].enter = '';
+      if (employees[index].exit === '-') employees[index].exit = '';
+    }
+    saveAndRender();
+  }
+
+  function deleteEmployee(index) {
+    if (confirm("آیا مطمئن هستید؟")) {
+      employees.splice(index, 1);
+      saveAndRender();
+    }
+  }
+
+  function saveToLocal() {
+    localStorage.setItem('employeeList', JSON.stringify(employees));
+  }
+
+  function saveFinalData() {
+    const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
+    const date = document.getElementById('dateInput').value.trim();
+    if (!date) {
+      alert("لطفاً تاریخ شمسی را وارد کنید.");
+      return;
+    }
+    history[date] = [...employees];
+    localStorage.setItem('attendanceHistory', JSON.stringify(history));
+    alert("✅ ذخیره شد برای تاریخ: " + date);
     loadHistoryDates();
-  </script>
+  }
+
+  function loadHistoryDates() {
+    const history = JSON.parse(localStorage.getItem('attendanceHistory')) || {};
+    const historyButtons = document.getElementById('historyButtons');
+    historyButtons.innerHTML = '';
+    document.getElementById('historyTable').innerHTML = '';
+    Object.keys(history).sort().reverse().forEach(date => {
+      const btn = document.createElement('span');
+      btn.textContent = date;
+      btn.className = 'history-btn';
+      btn.onclick = () => toggleHistoryTable(date, history[date]);
+      historyButtons.appendChild(btn);
+    });
+  }
+
+  let openDate = null;
+  function toggleHistoryTable(date, data) {
+    const container = document.getElementById('historyTable');
+    if (openDate === date) {
+      container.innerHTML = '';
+      openDate = null;
+      return;
+    }
+    openDate = date;
+    let html = `<h4>📆 گزارش برای تاریخ: ${date}</h4><table><tr><th>نام</th><th>شغل</th><th>ورود</th><th>خروج</th><th>وضعیت</th></tr>`;
+    data.forEach(emp => {
+      html += `<tr>
+        <td>${emp.name}</td>
+        <td>${emp.job}</td>
+        <td>${emp.enter}</td>
+        <td>${emp.exit}</td>
+        <td>${emp.status === 'present' ? 'حاضر' : 'غایب'}</td>
+      </tr>`;
+    });
+    html += '</table>';
+    container.innerHTML = html;
+  }
+
+  renderTable();
+  loadHistoryDates();
+</script>
 
 </body>
 </html>
