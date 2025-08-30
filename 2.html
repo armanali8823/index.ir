@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حضور و غیاب شخصی</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+body {
+  font-family: 'Vazirmatn', sans-serif;
+  background-image: url('https://torobche.com/wp-content/uploads/2017/10/Optical.Fiber_.thmb_.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20px;
+  min-height: 100vh;
+}
+.container {
+  background: rgba(0,0,0,0.6);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  text-align: center;
+  width: 90%;
+  max-width: 600px;
+}
+h1 { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+h2,h3 { margin-bottom: 15px; }
+input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; text-align:center; }
+button { padding: 12px 25px; margin: 5px; font-size: 16px; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; background: linear-gradient(145deg, #ff4d4f, #ff7875); color: #fff; font-weight: bold; box-shadow:0 6px 10px rgba(0,0,0,0.3),0 4px 6px rgba(0,0,0,0.2); }
+button:hover { transform: scale(1.08) translateY(-2px); box-shadow:0 10px 15px rgba(0,0,0,0.4),0 6px 8px rgba(0,0,0,0.25); }
+table { width: 100%; margin-top: 20px; border-collapse: collapse; background: #3a3a5c; border-radius: 10px; overflow: hidden; box-shadow:0 5px 15px rgba(0,0,0,0.4); direction: rtl; }
+th, td { padding: 8px; text-align: center; border-bottom: 1px solid #555; }
+th { background: #444; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container" id="loginContainer">
+  <h1>لطفاً رمز یا کد پرسنلی خود را وارد کنید</h1>
+  <input type="text" id="codeInput" placeholder="کد پرسنلی"><br>
+  <button id="loginBtn">ورود</button>
+</div>
+
+<div class="container hidden" id="attendanceContainer">
+  <h1 id="codeDisplay"></h1>
+  <h2 id="nameDisplay"></h2>
+  <input type="text" id="branch" placeholder="شعبه/محل کار"><br>
+  <button id="entryBtn">ورود</button>
+  <button id="exitBtn" disabled>خروج</button>
+  <h3 id="currentDate"></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>کد پرسنلی</th>
+        <th>تایم ورود</th>
+        <th>تایم خروج</th>
+        <th>شعبه</th>
+      </tr>
+    </thead>
+    <tbody id="myAttendance"></tbody>
+  </table>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCy53wSqqSXf4uFSIxbW6RT1ND9LZ32uok",
+    authDomain: "poyajahesh.firebaseapp.com",
+    projectId: "poyajahesh",
+    storageBucket: "poyajahesh.appspot.com",
+    messagingSenderId: "129336211473",
+    appId: "1:129336211473:web:f2ae34e45a5225369f99b0",
+    measurementId: "G-6XHF5CP26F"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const employees = {
+    "40480": "نسترن یکه فلاح",
+    "40380": "محمدرضا ورزدار",
+    "40387": "حسین کمالی",
+    "40363": "داود ساعدی"
+  };
+
+  const loginContainer = document.getElementById('loginContainer');
+  const attendanceContainer = document.getElementById('attendanceContainer');
+  const codeInput = document.getElementById('codeInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const codeDisplay = document.getElementById('codeDisplay');
+  const nameDisplay = document.getElementById('nameDisplay');
+  const branchEl = document.getElementById('branch');
+  const entryBtn = document.getElementById('entryBtn');
+  const exitBtn = document.getElementById('exitBtn');
+  const currentDateEl = document.getElementById('currentDate');
+  const tbody = document.getElementById('myAttendance');
+
+  let currentEmployee = null;
+
+  function todayStr(){ return new Date().toLocaleDateString('fa-IR'); }
+  let currentDay = todayStr();
+  currentDateEl.textContent = "تاریخ امروز: " + currentDay;
+
+  loginBtn.onclick = () => {
+    const code = codeInput.value.trim();
+    if(employees[code]){
+      currentEmployee = { code, name: employees[code] };
+      loginContainer.classList.add('hidden');
+      attendanceContainer.classList.remove('hidden');
+      codeDisplay.textContent = code;
+      nameDisplay.textContent = currentEmployee.name;
+      showMyAttendance();
+    } else {
+      alert("کد پرسنلی معتبر نیست!");
+    }
+  };
+
+  async function showMyAttendance(){
+    tbody.innerHTML = '';
+    const today = todayStr();
+    const q = query(collection(db,"attendance"), where("code","==",currentEmployee.code), where("date","==",today));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach(docSnap=>{
+      const item = docSnap.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.code}</td>
+        <td>${item.entryTime}</td>
+        <td>${item.exitTime || ''}</td>
+        <td>${item.branch}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  entryBtn.onclick = async () => {
+    const branch = branchEl.value.trim();
+    if(!branch){ alert('شعبه را وارد کنید'); return; }
+    const now = new Date();
+    await addDoc(collection(db,"attendance"),{
+      code: currentEmployee.code,
+      name: currentEmployee.name,
+      entryTime: now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}),
+      exitTime: '',
+      branch,
+      date: todayStr()
+    });
+    showMyAttendance();
+    entryBtn.disabled = true;
+    exitBtn.disabled = false;
+  };
+
+  exitBtn.onclick = async () => {
+    const branch = branchEl.value.trim();
+    if(!branch){ alert('شعبه را وارد کنید'); return; }
+    const today = todayStr();
+    const q = query(collection(db,"attendance"), where("code","==",currentEmployee.code), where("date","==",today), where("branch","==",branch));
+    const querySnapshot = await getDocs(q);
+    let updated = false;
+    for(const docSnap of querySnapshot.docs){
+      const item = docSnap.data();
+      if(!item.exitTime){
+        const now = new Date();
+        await updateDoc(doc(db,"attendance",docSnap.id),{
+          exitTime: now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})
+        });
+        updated = true;
+      }
+    }
+    if(!updated){ alert("هیچ ورود باز برای این شعبه وجود ندارد!"); return; }
+    showMyAttendance();
+    entryBtn.disabled = false;
+    exitBtn.disabled = true;
+    branchEl.value = '';
+  };
+
+  setInterval(()=>{
+    const today = todayStr();
+    if(today !== currentDay){
+      currentDay = today;
+      if(currentEmployee) showMyAttendance();
+      entryBtn.disabled = false;
+      exitBtn.disabled = true;
+    }
+  },60000);
+</script>
+</body>
+</html>
